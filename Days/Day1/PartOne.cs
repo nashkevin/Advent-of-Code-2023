@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Days
+﻿namespace Days.Day1
 {
-    public static class Day1
+    public static class PartOne
     {
         public static int Solve(string s)
         {
@@ -17,7 +11,7 @@ namespace Days
 
             for (int i = 0; i < s.Length; i++)
             {
-                if (TryGetDigit(s[i], out int d))
+                if (Shared.TryGetDigit(s[i], out int d))
                 {
                     lastDigit = d;
                     if (firstDigit < 0)
@@ -39,12 +33,6 @@ namespace Days
         public static int SolveFromFile(string path)
         {
             return Solve(File.ReadAllText(path));
-        }
-
-        private static bool TryGetDigit(char c, out int d)
-        {
-            d = c - '0';
-            return char.IsDigit(c);
         }
     }
 }

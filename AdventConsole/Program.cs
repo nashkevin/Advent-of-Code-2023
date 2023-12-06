@@ -6,10 +6,7 @@ namespace AdventConsole
     {
         static void Main(string[] args)
         {
-            string input = "123\n1\n000\nfoo9bar\n777";
-            Console.WriteLine(input);
-            Console.WriteLine();
-            Console.WriteLine($"output: {Day1.Solve(input)}");
+            Days.Day1.PartTwo.Solve("");
         }
     }
 }
