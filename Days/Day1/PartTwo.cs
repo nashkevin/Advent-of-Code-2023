@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Days.Day1
+﻿namespace Days.Day1
 {
     public static class PartTwo
     {
         private static readonly (string, int)[] DigitWords =
         [
-            ("zzero", 99),
             ("zero", 0), ("one", 1), ("two", 2), ("three", 3), ("four", 4),
             ("five", 5), ("six", 6), ("seven", 7), ("eight", 8), ("nine", 9),
         ];
@@ -19,20 +11,68 @@ namespace Days.Day1
 
         public static int Solve(string s)
         {
-            LetterTreeNode.CreateTree(DigitWords);
-            return -1;
+            int calibrationSum = 0;
+
+            int firstDigit = -1;
+            int lastDigit = -1;
+
+            WordFinder wordFinder = new();
+
+            for (int i = 0; i < s.Length; i++)
+            {
+                wordFinder.Enqueue(s[i]);
+
+                if (Shared.TryGetDigit(s[i], out int d) || wordFinder.TryGetDigit(out d))
+                {
+                    lastDigit = d;
+                    if (firstDigit < 0)
+                    {
+                        firstDigit = d;
+                    }
+                }
+
+                if ((s[i] == '\n' || i == s.Length - 1) && 0 <= firstDigit)
+                {
+                    calibrationSum += 10 * firstDigit + lastDigit;
+                    firstDigit = -1;
+                    lastDigit = -1;
+                }
+            }
+
+            return calibrationSum;
         }
 
-        private class DigitWord
+        public static int SolveFromFile(string path)
         {
+            return Solve(File.ReadAllText(path));
+        }
+
+        private class WordFinder
+        {
+            private readonly LetterTreeNode wordTree;
+            
             private readonly char[] buffer = new char[MaxWordLength];
             private int head = 0;
 
-            bool Enqueue(char c, out int digit)
+            internal WordFinder()
             {
-                digit = -999;
+                wordTree = LetterTreeNode.CreateTree(DigitWords);
+            }
+
+            internal void Enqueue(char c)
+            {
                 head.Advance();
                 buffer[head] = c;
+            }
+
+            internal bool TryGetDigit(out int digit)
+            {
+                if (wordTree.TryFindMatch(buffer, head, out int matchedValue))
+                {
+                    digit = matchedValue;
+                    return true;
+                }
+                digit = -1;
                 return false;
             }            
         }
@@ -44,6 +84,26 @@ namespace Days.Day1
             private readonly Dictionary<char, LetterTreeNode> children;
 
             LetterTreeNode() => children = [];
+
+            internal bool TryFindMatch(char[] buffer, int head, out int digit)
+            {
+                if (isLeaf)
+                {
+                    digit = this.digit;
+                    return true;
+                }
+                else if (children.TryGetValue(buffer[head], out LetterTreeNode? childNode))
+                {
+                    head.Retract();
+                    return childNode.TryFindMatch(buffer, head, out digit);
+                }
+                else
+                {
+                    digit = -1;
+                    return false;
+                }
+                
+            }
 
             private void AddChild(IList<char> letters, int digit)
             {
