@@ -1,6 +1,6 @@
 ﻿namespace Days.Day1
 {
-    internal class Shared
+    internal static class Shared
     {
         internal static bool TryGetDigit(char c, out int d)
         {
