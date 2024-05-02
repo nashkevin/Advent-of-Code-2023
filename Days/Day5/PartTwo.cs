@@ -115,11 +115,7 @@ namespace Days.Day5
 
             public bool IsOverlapping(Range? other)
             {
-                if (other == null)
-                {
-                    return false;
-                }
-                return !(Max < other.Min || other.Max < Min);
+                return other != null && !(Max < other.Min || other.Max < Min);
             }
 
             public int CompareTo(Range? other)
@@ -133,11 +129,6 @@ namespace Days.Day5
                     return 1;
                 }
                 return 0;
-            }
-
-            public override string ToString()
-            {
-                return $"[{Min},{Max}]";
             }
 
             public enum Edge
@@ -159,12 +150,6 @@ namespace Days.Day5
 
             public RangeMap(List<long> longs) : this(longs[0], longs[1], longs[2]) { }
 
-
-            public bool Process(long n, out long p)
-            {
-                p = n + Shift;
-                return Min <= n && n <= Max;
-            }
 
             /// <summary>
             /// Shifts and trims a given <see cref="Range"/> according to the map rules
@@ -188,22 +173,13 @@ namespace Days.Day5
                         switch (GetRightEdgeType(other))
                         {
                             case Edge.Overhang:
-                                Console.WriteLine($"{other} matched {this} L:Overhang R:Overhang");
-                                other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
-                                break;
-                            //goto case Edge.Meeting;
+                                goto case Edge.Meeting;
                             case Edge.Meeting:
-                                Console.WriteLine($"{other} matched {this} L:Overhang R:Meeting");
                                 other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
                             case Edge.Underhang:
-                                Console.WriteLine($"{other} matched {this} L:Overhang R:Underhang");
                                 splits.Add(other.SplitRight(Max));
-                                Console.WriteLine($"\t└applied right split, now {other} AND {splits.Last()}");
                                 other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
                         }
                         break;
@@ -211,22 +187,13 @@ namespace Days.Day5
                         switch (GetRightEdgeType(other))
                         {
                             case Edge.Overhang:
-                                Console.WriteLine($"{other} matched {this} L:Meeting R:Overhang");
-                                other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
-                                break;
-                            //goto case Edge.Meeting;
+                                goto case Edge.Meeting;
                             case Edge.Meeting:
-                                Console.WriteLine($"{other} matched {this} L:Meeting R:Meeting");
                                 other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
                             case Edge.Underhang:
-                                Console.WriteLine($"{other} matched {this} L:Meeting R:Underhang");
                                 splits.Add(other.SplitRight(Max));
-                                Console.WriteLine($"\t└applied right split, now {other} AND {splits.Last()}");
                                 other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
                         }
                         break;
@@ -234,38 +201,20 @@ namespace Days.Day5
                         switch (GetRightEdgeType(other))
                         {
                             case Edge.Overhang:
-                                Console.WriteLine($"{other} matched {this} L:Underhang R:Overhang");
-                                splits.Add(other.SplitLeft(Min));
-                                Console.WriteLine($"\t└applied left split, now {splits.Last()} AND {other}");
-                                other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
-                                break;
-                            //goto case Edge.Meeting;
+                                goto case Edge.Meeting;
                             case Edge.Meeting:
-                                Console.WriteLine($"{other} matched {this} L:Underhang R:Meeting");
                                 splits.Add(other.SplitLeft(Min));
-                                Console.WriteLine($"\t└applied left split, now {splits.Last()} AND {other}");
                                 other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
                             case Edge.Underhang:
-                                Console.WriteLine($"{other} matched {this} L:Underhang R:Underhang");
                                 splits.Add(other.SplitLeft(Min));
-                                Console.WriteLine($"\t└applied left split, now {splits.Last()} AND {other}");
                                 splits.Add(other.SplitRight(Max));
-                                Console.WriteLine($"\t└applied right split, now {splits.Last()} AND {other}");
                                 other.ApplyShift(Shift);
-                                Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
                         }
                         break;
                 }
                 return true;
-            }
-
-            public override string ToString()
-            {
-                return $"R{base.ToString()} s:{Shift}";
             }
         }
 
