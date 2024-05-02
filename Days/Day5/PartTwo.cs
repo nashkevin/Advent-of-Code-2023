@@ -89,28 +89,12 @@ namespace Days.Day5
 
             public Edge GetLeftEdgeType(Range other)
             {
-                if (Min < other.Min)
-                {
-                    return Edge.Overhang;
-                }
-                if (other.Min < Min)
-                {
-                    return Edge.Underhang;
-                }
-                return Edge.Meeting;
+                return (Edge)Min.CompareTo(other.Min);
             }
 
             public Edge GetRightEdgeType(Range other)
             {
-                if (other.Max < Max)
-                {
-                    return Edge.Overhang;
-                }
-                if (Max < other.Max)
-                {
-                    return Edge.Underhang;
-                }
-                return Edge.Meeting;
+                return (Edge)other.Max.CompareTo(Max);
             }
 
             public bool IsOverlapping(Range? other)
@@ -120,22 +104,14 @@ namespace Days.Day5
 
             public int CompareTo(Range? other)
             {
-                if (other == null || Min < other.Min)
-                {
-                    return -1;
-                }
-                if (other.Min < Min)
-                {
-                    return 1;
-                }
-                return 0;
+                return Min.CompareTo(other?.Min);
             }
 
             public enum Edge
             {
-                Meeting,
-                Overhang,
-                Underhang,
+                Overhang = -1,
+                Meeting = 0,
+                Underhang = 1,
             }
         }
 
@@ -163,7 +139,6 @@ namespace Days.Day5
 
                 if (!IsOverlapping(other))
                 {
-                    Console.WriteLine($"{other} did not overlap {this}");
                     return false;
                 }
 
