@@ -142,13 +142,13 @@ namespace Days.Day5
                     return false;
                 }
 
-                switch (GetLeftEdgeType(other))
-                {
-                    case Edge.Overhang:
-                        switch (GetRightEdgeType(other))
-                        {
-                            case Edge.Overhang:
-                                goto case Edge.Meeting;
+                switch (GetLeftEdgeType(other))             // I reasoned this out on paper with a 3x3 table
+                {                                           // if it's hard to understand, try recreating my diagram
+                    case Edge.Overhang:                     //        Right
+                        switch (GetRightEdgeType(other))    //  L    O  M  U                L.O. & R.U.
+                        {                                   //  e  O[ ][ ][ ]       |-------|       <- map
+                            case Edge.Overhang:             //  f  M[ ][ ][ ]           |-------|   <- range
+                                goto case Edge.Meeting;     //  t  U[ ][ ][ ]
                             case Edge.Meeting:
                                 other.ApplyShift(Shift);
                                 break;
