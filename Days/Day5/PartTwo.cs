@@ -1,4 +1,5 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
 
 namespace Days.Day5
 {
@@ -7,47 +8,27 @@ namespace Days.Day5
         public static long Solve(string[] almanac)
         {
             List<Range> ranges = almanac[0][(almanac[0].IndexOf(' ') + 1)..].ToRanges();
-            List<MapRule> rules = [];
+            ranges.Sort();
+            List<MapLayer> mapLayers = [new MapLayer()];
 
-            bool isWithinRules = false;
-            bool isRulesJustFinished = false;
             for (int i = 0; i < almanac.Length; i++)
             {
                 Console.WriteLine(almanac[i]);
                 if (0 < almanac[i].Length && char.IsDigit(almanac[i][0]))
                 {
-                    isWithinRules = true;
-
-                    rules.Add(new MapRule(almanac[i].ToLongs()));
+                    mapLayers.Last().AddMap(new RangeMap(almanac[i].ToLongs()));
                 }
-                else
+                else if (!mapLayers.Last().IsEmpty())
                 {
-                    if (isWithinRules)
-                    {
-                        isRulesJustFinished = true;
-                    }
-                    isWithinRules = false;
-                }
-
-                if (isRulesJustFinished || i == almanac.Length - 1)
-                {
-                    for (int j = ranges.Count - 1; j >= 0; j--)
-                    {
-                        foreach (MapRule rule in rules)
-                        {
-                            if (rule.TryApplyOverlapShift(ranges[j], out List<Range> newRanges))
-                            {
-                                ranges.AddRange(newRanges);
-                                break;
-                            }                            
-                        }
-                    }
-                    rules.Clear();
-                    isWithinRules = false;
-                    isRulesJustFinished = false;
+                    mapLayers.Add(new MapLayer());
                 }
             }
 
+            foreach (MapLayer layer in mapLayers)
+            {
+                ranges = layer.PassThrough(ranges);
+            }
+            
             return ranges.Min()?.Min ?? -1;
         }
 
@@ -84,12 +65,6 @@ namespace Days.Day5
             {
                 Min = min;
                 Max = min + length - 1;
-            }
-
-            public Range(Range other)
-            {
-                Min = other.Min;
-                Max = other.Max;
             }
 
             public void ApplyShift(long shift)
@@ -147,7 +122,18 @@ namespace Days.Day5
                 return !(Max < other.Min || other.Max < Min);
             }
 
-            public int CompareTo(Range? other) => (int)(other == null ? -1 : Min - other.Min);
+            public int CompareTo(Range? other)
+            {
+                if (other == null || Min < other.Min)
+                {
+                    return -1;
+                }
+                if (other.Min < Min)
+                {
+                    return 1;
+                }
+                return 0;
+            }
 
             public override string ToString()
             {
@@ -162,16 +148,16 @@ namespace Days.Day5
             }
         }
 
-        private class MapRule : Range
+        private class RangeMap : Range
         {
             long Shift { get; set; }
 
-            public MapRule(long destination, long source, long length) : base(source, length)
+            public RangeMap(long destination, long source, long length) : base(source, length)
             {
                 Shift = destination - source;
             }
 
-            public MapRule(List<long> longs) : this(longs[0], longs[1], longs[2]) { }
+            public RangeMap(List<long> longs) : this(longs[0], longs[1], longs[2]) { }
 
 
             public bool Process(long n, out long p)
@@ -180,13 +166,19 @@ namespace Days.Day5
                 return Min <= n && n <= Max;
             }
 
-            public bool TryApplyOverlapShift(Range other, out List<Range> newRanges)
+            /// <summary>
+            /// Shifts and trims a given <see cref="Range"/> according to the map rules
+            /// and provides the newly split ranges as output.
+            /// </summary>
+            /// <returns><c>true</c> if a shift was applied to <paramref name="other"/>,
+            /// <c>false</c> otherwise</returns>
+            public bool TryApplyOverlapShift(Range other, out List<Range> splits)
             {
-                newRanges = [];
+                splits = [];
 
                 if (!IsOverlapping(other))
                 {
-                    //Console.WriteLine($"{other} did not overlap {this}");
+                    Console.WriteLine($"{other} did not overlap {this}");
                     return false;
                 }
 
@@ -208,8 +200,8 @@ namespace Days.Day5
                                 break;
                             case Edge.Underhang:
                                 Console.WriteLine($"{other} matched {this} L:Overhang R:Underhang");
-                                newRanges.Add(other.SplitRight(Max));
-                                Console.WriteLine($"\t└applied right split, now {other} AND {newRanges.Last()}");
+                                splits.Add(other.SplitRight(Max));
+                                Console.WriteLine($"\t└applied right split, now {other} AND {splits.Last()}");
                                 other.ApplyShift(Shift);
                                 Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
@@ -231,8 +223,8 @@ namespace Days.Day5
                                 break;
                             case Edge.Underhang:
                                 Console.WriteLine($"{other} matched {this} L:Meeting R:Underhang");
-                                newRanges.Add(other.SplitRight(Max));
-                                Console.WriteLine($"\t└applied right split, now {other} AND {newRanges.Last()}");
+                                splits.Add(other.SplitRight(Max));
+                                Console.WriteLine($"\t└applied right split, now {other} AND {splits.Last()}");
                                 other.ApplyShift(Shift);
                                 Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
@@ -243,25 +235,25 @@ namespace Days.Day5
                         {
                             case Edge.Overhang:
                                 Console.WriteLine($"{other} matched {this} L:Underhang R:Overhang");
-                                newRanges.Add(other.SplitLeft(Min));
-                                Console.WriteLine($"\t└applied left split, now {newRanges.Last()} AND {other}");
+                                splits.Add(other.SplitLeft(Min));
+                                Console.WriteLine($"\t└applied left split, now {splits.Last()} AND {other}");
                                 other.ApplyShift(Shift);
                                 Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
                             //goto case Edge.Meeting;
                             case Edge.Meeting:
                                 Console.WriteLine($"{other} matched {this} L:Underhang R:Meeting");
-                                newRanges.Add(other.SplitLeft(Min));
-                                Console.WriteLine($"\t└applied left split, now {newRanges.Last()} AND {other}");
+                                splits.Add(other.SplitLeft(Min));
+                                Console.WriteLine($"\t└applied left split, now {splits.Last()} AND {other}");
                                 other.ApplyShift(Shift);
                                 Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
                             case Edge.Underhang:
                                 Console.WriteLine($"{other} matched {this} L:Underhang R:Underhang");
-                                newRanges.Add(other.SplitLeft(Min));
-                                Console.WriteLine($"\t└applied left split, now {newRanges.Last()} AND {other}");
-                                newRanges.Add(other.SplitRight(Max));
-                                Console.WriteLine($"\t└applied right split, now {newRanges.Last()} AND {other}");
+                                splits.Add(other.SplitLeft(Min));
+                                Console.WriteLine($"\t└applied left split, now {splits.Last()} AND {other}");
+                                splits.Add(other.SplitRight(Max));
+                                Console.WriteLine($"\t└applied right split, now {splits.Last()} AND {other}");
                                 other.ApplyShift(Shift);
                                 Console.WriteLine($"\t└applied shift {Shift}, now {other}");
                                 break;
@@ -273,7 +265,48 @@ namespace Days.Day5
 
             public override string ToString()
             {
-                return $"R{base.ToString()}s{Shift}";
+                return $"R{base.ToString()} s:{Shift}";
+            }
+        }
+
+        private class MapLayer
+        {
+            private readonly List<RangeMap> maps = [];
+
+            
+            public void AddMap(RangeMap map)
+            {
+                maps.Add(map);
+                maps.Sort();
+            }
+
+            public bool IsEmpty() => maps.Count == 0;
+
+            public List<Range> PassThrough(List<Range> ranges)
+            {
+                List<Range> finished = [];
+                List<Range> allSplits = [];
+                for (int i = ranges.Count - 1; 0 <= i; i--)
+                {
+                    foreach (RangeMap map in maps)
+                    {
+                        if (map.TryApplyOverlapShift(ranges[i], out List<Range> splits))
+                        {
+                            finished.Add(ranges[i]);
+                            ranges.RemoveAt(i);
+                            allSplits.AddRange(splits);
+                            break;
+                        }
+                        allSplits.AddRange(splits);
+                    }
+                }
+                if (0 <  allSplits.Count)
+                {
+                    finished.AddRange(PassThrough(allSplits));
+                }
+                finished.AddRange(ranges);
+                finished.Sort();
+                return finished;
             }
         }
     }
