@@ -1,6 +1,6 @@
 ﻿namespace Days.Day7
 {
-    public static class PartOne
+    public static class PartTwo
     {
         public static int SolveFromFile(string path)
         {
@@ -69,15 +69,18 @@
 
             public static HandType GetType(Card[] cards)
             {
-                return cards.Distinct().Count() switch
+                bool hasJoker = cards.Any(x => x == Card.Joker);
+
+                return (cards.Distinct().Count() - (hasJoker ? 1 : 0)) switch
                 {
+                    0 => HandType.FiveOfAKind, // handles a hand of all jokers
                     1 => HandType.FiveOfAKind,
-                    2 => (cards.Count(x => x == cards[0]) == 1 || cards.Count(x => x == cards[0]) == 4)
+                    2 => cards.Where(x => x != Card.Joker).GroupBy(x => x).Any(x => x.Count() == 1 || x.Count() == 4)
                             ? HandType.FourOfAKind
                             : HandType.FullHouse,
-                    3 => (cards.Count(x => x == cards[0]) == 2 || cards.Count(x => x == cards[1]) == 2)
-                            ? HandType.TwoPair
-                            : HandType.ThreeOfAKind,
+                    3 => (hasJoker || cards.GroupBy(x => x).Any(x => x.Count() == 3))
+                            ? HandType.ThreeOfAKind
+                            : HandType.TwoPair,
                     4 => HandType.OnePair,
                     _ => HandType.HighCard,
                 };
@@ -91,7 +94,7 @@
                 ThreeOfAKind = 3,
                 FullHouse = 4,
                 FourOfAKind = 5,
-                FiveOfAKind = 6, // Balatro reference??? :O :o :O
+                FiveOfAKind = 6,
             }
         }
 
@@ -99,17 +102,23 @@
         {
             public char Symbol { get; init; }
             public int Order { get; init; }
+            public int Value { get; init; }
 
             public int CompareTo(Card? other)
             {
                 return Order.CompareTo(other?.Order);
             }
 
+            public override string ToString()
+            {
+                return Symbol.ToString();
+            }
 
             public static Card Get(char c)
             {
                 return c switch
                 {
+                    'J' => Joker,
                     '2' => Two,
                     '3' => Three,
                     '4' => Four,
@@ -119,7 +128,6 @@
                     '8' => Eight,
                     '9' => Nine,
                     'T' => Ten,
-                    'J' => Jack,
                     'Q' => Queen,
                     'K' => King,
                     'A' => Ace,
@@ -127,6 +135,7 @@
                 };
             }
 
+            public static Card Joker = new() { Symbol = 'J', Order = -1 };
             public static Card Two = new() { Symbol = '2', Order = 0 };
             public static Card Three = new() { Symbol = '3', Order = 1 };
             public static Card Four = new() { Symbol = '4', Order = 2 };
