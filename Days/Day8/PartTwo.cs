@@ -2,51 +2,58 @@
 
 namespace Days.Day8
 {
+    /// <summary>
+    /// <see href="https://en.wikipedia.org/wiki/Syzygy_(astronomy)">
+    /// What we really have to do is figure out when all our orbits meet.
+    /// </see>
+    /// </summary>
     public static class PartTwo
     {
-        public static ulong SolveFromFile(string path)
+        public static long SolveFromFile(string path)
         {
             return Solve(File.ReadAllLines(path));
         }
 
-        public static ulong Solve(string[] s)
+        public static long Solve(string[] s)
         {
-            Dictionary<string, Node> allNodes = [];
-            List<Node> startingNodes = [];
+            Dictionary<string, Node> nodes = [];
+            List<Node> paths = [];
+            List<long> pathLengths = [];
             for (int i = 2; i < s.Length; i++)
             {
                 Node node = new(s[i]);
-                allNodes.Add(node.Self, node);
+                nodes.Add(node.Self, node);
                 if (node.Self.EndsWith('A'))
                 {
-                    startingNodes.Add(node);
+                    paths.Add(node);
                 }
             }
             int stepIndex = 0;
-            ulong stepCounter = 0;
-            while (!startingNodes.All(x => x.Self.EndsWith('Z')))
+            long stepCounter = 0;
+
+            while (0 < paths.Count)
             {
-                for (int i = startingNodes.Count - 1; 0 <= i; i--)
-                {
-                    //if (i == 0)
-                    //{
-                    //    Console.Write($"{s[0][stepIndex]}: ");
-                    //    Console.Write($"{startingStrings[i]} -> ");
-                    //}
-                    startingNodes[i] = allNodes[s[0][stepIndex] == 'L' ? startingNodes[i].Left : startingNodes[i].Right];
-                    //if (i == 0)
-                    //{
-                    //    Console.WriteLine(startingStrings[i]);
-                    //}
-                    //if (269 < stepCounter)
-                    //{
-                    //    break;
-                    //}
-                }
-                stepIndex = stepIndex < s[0].Length - 1 ? stepIndex + 1 : 0;
                 stepCounter++;
+
+                for (int i = paths.Count - 1; 0 <= i; i--)
+                {
+                    paths[i] = nodes[s[0][stepIndex] == 'L' ? paths[i].Left : paths[i].Right];
+                    if (paths[i].Self.EndsWith('Z'))
+                    {
+                        // this path has reached an end, record its length
+                        paths.RemoveAt(i);
+                        pathLengths.Add(stepCounter);
+                    }
+                }
+
+                stepIndex = stepIndex < s[0].Length - 1 ? stepIndex + 1 : 0;
             }
-            return stepCounter;
+
+            return LCM(pathLengths);
         }
+
+        private static long LCM(List<long> numbers) => numbers.Aggregate(LCM);
+        private static long LCM(long a, long b) => Math.Abs(a * b) / GCD(a, b);
+        private static long GCD(long a, long b) => b == 0 ? a : GCD(b, a % b);
     }
 }
