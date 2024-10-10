@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿using static Days.Day10.Shared;
 
 namespace Days.Day10
 {
@@ -35,9 +35,7 @@ namespace Days.Day10
             do
             {
                 direction = GetNextDirection(map, x, y, direction);
-                var t = CoordinateChange[direction ?? Direction.East]; // east is arbitrary, will never be null
-                x += t.x;
-                y += t.y;
+                direction.DoStep(ref x, ref y);
                 stepCounter++;
             }
             while (x != sx || y != sy);
@@ -47,62 +45,22 @@ namespace Days.Day10
 
         private static Direction GetNextDirection(string[] map, int x, int y, Direction? previousDirection = null)
         {
-            foreach (var direction in Enum.GetValues<Direction>())
+            foreach (Direction direction in Direction.Cardinals)
             {
-                var t = CoordinateChange[direction];
-                if (previousDirection != ReverseDirections[direction] &&
-                    GetCanExitPipe(direction, map[y][x]) &&
-                    GetCanEnterPipe(direction, map[y + t.y][x + t.x]))
+                (int tx, int ty) = direction.GetStep(x, y);
+                if (ty < 0 || map.Length <= ty ||
+                    tx < 0 || map[ty].Length <= tx)
+                {
+                    continue;
+                }
+                if (!direction.GetReverse().Equals(previousDirection) &&
+                    Pipe.GetCanExitPipe(direction, Pipe.GetPipe(map[y][x])) &&
+                    Pipe.GetCanEnterPipe(direction, Pipe.GetPipe(map[ty][tx])))
                 {
                     return direction;
                 }
             }
             throw new Exception("Dead End");
-        }
-
-        private static bool GetCanExitPipe(Direction direction, char pipe)
-        {
-            return Pipes[pipe].Contains(direction);
-        }
-
-        private static bool GetCanEnterPipe(Direction direction, char pipe)
-        {
-            return Pipes[pipe].Contains(ReverseDirections[direction]);
-        }
-
-
-        private static readonly Dictionary<char, HashSet<Direction>> Pipes = new()
-        {
-            { '|', new() { Direction.North, Direction.South } },
-            { '-', new() { Direction.East, Direction.West } },
-            { 'L', new() { Direction.North, Direction.East } },
-            { 'J', new() { Direction.North, Direction.West } },
-            { '7', new() { Direction.South, Direction.West } },
-            { 'F', new() { Direction.East, Direction.South } },
-            { '.', [] },
-            { 'S', new() { Direction.North, Direction.East, Direction.South, Direction.West } },
-        };
-
-        private static readonly Dictionary<Direction, Direction> ReverseDirections = new()
-        {
-            { Direction.North, Direction.South },
-            { Direction.South, Direction.North },
-            { Direction.East, Direction.West },
-            { Direction.West, Direction.East },
-        };
-
-        private static readonly Dictionary<Direction, (int x, int y)> CoordinateChange = new()
-        {
-            { Direction.North, (0, -1) },
-            { Direction.East, (1, 0) },
-            { Direction.South, (0, 1) },
-            { Direction.West, (-1, 0) },
-        };
-
-
-        internal enum Direction
-        {
-            North, East, South, West,
         }
     }
 }
