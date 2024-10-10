@@ -1,6 +1,6 @@
 ﻿namespace Days.Day9
 {
-    public static class PartOne
+    public static class PartTwo
     {
         public static long SolveFromFile(string path)
         {
@@ -31,9 +31,9 @@
                 if (0 < i)
                 {
                     isLinear &= deltas[i] == deltas[i - 1];
-                }                
+                }
             }
-            return a[0] - (isLinear ? deltas[0] : GetNextInSequence(deltas));
+            return a[^1] + (isLinear ? deltas[0] : GetNextInSequence(deltas));
         }
     }
 }
