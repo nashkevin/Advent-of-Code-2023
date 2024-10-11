@@ -1,4 +1,4 @@
-﻿namespace Days.Day11
+namespace Days.Day11
 {
     public static class PartOne
     {
