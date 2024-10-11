@@ -33,21 +33,24 @@
             {
                 for (int j = i + 1; j < galaxies.Count; j++)
                 {
-                    int distance = Math.Abs(galaxies[i].x - galaxies[j].x) + Math.Abs(galaxies[i].y - galaxies[j].y);
-                    
+                    int xMax = Math.Max(galaxies[i].x, galaxies[j].x);
+                    int xMin = Math.Min(galaxies[i].x, galaxies[j].x);
+                    int yMax = Math.Max(galaxies[i].y, galaxies[j].y);
+                    int yMin = Math.Min(galaxies[i].y, galaxies[j].y);
+
+                    int distance = xMax - xMin + yMax - yMin;
+
                     // empty rows and columns count twice
-                    // TODO determining this intersection can be done more efficiently,
-                    // possibly by looping over the empties instead
-                    for (int k = Math.Min(galaxies[i].x, galaxies[j].x) + 1; k < Math.Max(galaxies[i].x, galaxies[j].x); k++)
+                    foreach (int emptyColumn in emptyColumns)
                     {
-                        if (emptyColumns.Contains(k))
+                        if (xMin < emptyColumn && emptyColumn < xMax)
                         {
                             distance++;
                         }
                     }
-                    for (int k = Math.Min(galaxies[i].y, galaxies[j].y) + 1; k < Math.Max(galaxies[i].y, galaxies[j].y); k++)
+                    foreach (int emptyRow in emptyRows)
                     {
-                        if (emptyRows.Contains(k))
+                        if (yMin < emptyRow && emptyRow < yMax)
                         {
                             distance++;
                         }
