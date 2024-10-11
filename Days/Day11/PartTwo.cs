@@ -1,8 +1,8 @@
-using static Days.Day11.Shared;
+﻿using static Days.Day11.Shared;
 
 namespace Days.Day11
 {
-    public static class PartOne
+    public static class PartTwo
     {
         public static long SolveFromFile(string path)
         {
@@ -11,7 +11,7 @@ namespace Days.Day11
 
         public static long Solve(string[] map)
         {
-            return CalculatePairDistances(map, 2);
+            return CalculatePairDistances(map, 1_000_000);
         }
     }
 }
