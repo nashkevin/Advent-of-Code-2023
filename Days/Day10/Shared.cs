@@ -1,13 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Days.Day10
+﻿namespace Days.Day10
 {
     internal static class Shared
     {
+        internal static (int x, int y) GetStartingPoint(string[] map)
+        {
+            var point = (x: 0, y: 0);
+            for (int i = 0; i < map.Length; i++)
+            {
+                for (int j = 0; j < map[i].Length; j++)
+                {
+                    if (map[i][j] == 'S')
+                    {
+                        point.y = i;
+                        point.x = j;
+                        break;
+                    }
+                }
+            }
+            return point;
+        }
+
+        internal static Direction GetNextDirection(string[] map, int x, int y, Direction? previousDirection = null)
+        {
+            foreach (Direction direction in Direction.Cardinals)
+            {
+                (int tx, int ty) = direction.GetStep(x, y);
+                if (ty < 0 || map.Length <= ty ||
+                    tx < 0 || map[ty].Length <= tx)
+                {
+                    continue;
+                }
+                if (!direction.GetReverse().Equals(previousDirection) &&
+                    Pipe.GetCanExitPipe(direction, Pipe.GetPipe(map[y][x])) &&
+                    Pipe.GetCanEnterPipe(direction, Pipe.GetPipe(map[ty][tx])))
+                {
+                    return direction;
+                }
+            }
+            throw new Exception("Dead End");
+        }
+
+
         internal class Pipe
         {
             private static readonly Dictionary<char, Pipe> charToPipe = new()
@@ -23,6 +56,7 @@ namespace Days.Day10
             };
 
             internal static Pipe GetPipe(char c) => charToPipe[c];
+
             internal static bool GetCanExitPipe(Direction direction, Pipe pipe)
             {
                 return pipe.Directions.Contains(direction);
@@ -34,9 +68,6 @@ namespace Days.Day10
             }
 
 
-            internal bool IsBlockingVertical { get; }
-            internal bool IsBlockingHorizontal { get; }
-
             internal HashSet<Direction> Directions { get; init; }
 
             internal Pipe(params Direction[] directions)
@@ -44,6 +75,7 @@ namespace Days.Day10
                 Directions = new(directions);
             }
         }
+
 
         internal class Direction
         {
